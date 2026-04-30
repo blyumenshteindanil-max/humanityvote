@@ -13,7 +13,7 @@ import { useState, useEffect, useMemo } from 'react';
  *  - regionTotal: number                  — total votes in user's region
  *  - lang       : 'en' | 'ru' | 'de' | ... (must match og.jsx COPY keys)
  *  - t          : translation function (key) => string  — from i18n.js
- *  - siteUrl    : 'https://humanityvote.vercel.app' (or .org once linked)
+ *  - siteUrl    : 'https://humanityvote.org'
  */
 export default function ResultCard({
   questionId,
@@ -27,7 +27,7 @@ export default function ResultCard({
   const [copied, setCopied] = useState(false);
   const [downloadStatus, setDownloadStatus] = useState('idle'); // idle | loading | done | error
   const translate = typeof t === 'function' ? t : (key) => key;
-  const baseUrl = siteUrl || 'https://humanityvote.vercel.app';
+  const baseUrl = siteUrl || 'https://humanityvote.org';
 
   // ── Decide card state: early / rare / majority ──
   const { state, pct, rank } = useMemo(() => {

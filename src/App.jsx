@@ -34,12 +34,7 @@ const THREAT_ACCENT_RGB = {
   inequality: '192,132,252',
   ai: '34,211,238',
 };
-const SITE_URL =
-  typeof window !== 'undefined' &&
-  window.location.hostname !== 'localhost' &&
-  window.location.hostname !== '127.0.0.1'
-    ? window.location.origin
-    : 'https://humanityvote.vercel.app';
+const SITE_URL = 'https://humanityvote.org';
 const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || '';
 
 // Approximate lat/lon centers of each continent for globe markers
@@ -495,7 +490,7 @@ function ShareButton({ lang, questionId }) {
 
   async function share() {
     const qLabel = t(lang, `q_${questionId}`);
-    const url = 'https://humanityvote.vercel.app';
+    const url = SITE_URL;
     const text = `I voted on HumanityVote: "${qLabel}" is the biggest threat to humanity. What do you think? ${url}`;
 
     try {
