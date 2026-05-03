@@ -1,5 +1,3 @@
-import { createClient } from '@supabase/supabase-js';
-
 const QUESTION_IDS = ['air', 'water', 'food', 'climate', 'health', 'war', 'inequality', 'ai'];
 const REGION_IDS = ['eu', 'as', 'na', 'sa', 'af', 'oc'];
 const TURNSTILE_VERIFY_URL = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
@@ -81,19 +79,53 @@ async function verifyTurnstile(token, remoteIp) {
   return { ok: true };
 }
 
-function createSupabaseAdminClient() {
+function getSupabaseAdminConfig() {
   const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
   const supabaseSecretKey =
-    process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
 
   if (!supabaseUrl || !supabaseSecretKey) return null;
 
-  return createClient(supabaseUrl, supabaseSecretKey, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
+  return {
+    supabaseUrl: supabaseUrl.replace(/\/$/, ''),
+    supabaseSecretKey,
+  };
+}
+
+async function insertVote(questionId, regionId, fingerprint) {
+  const config = getSupabaseAdminConfig();
+  if (!config) {
+    return { ok: false, status: 500, code: 'supabase_not_configured' };
+  }
+
+  const response = await fetch(`${config.supabaseUrl}/rest/v1/votes`, {
+    method: 'POST',
+    headers: {
+      apikey: config.supabaseSecretKey,
+      'Content-Type': 'application/json',
+      Prefer: 'return=minimal',
     },
+    body: JSON.stringify({
+      question_id: questionId,
+      region_id: regionId,
+      fingerprint,
+    }),
   });
+
+  if (response.ok) return { ok: true };
+
+  let error = null;
+  try {
+    error = await response.json();
+  } catch {
+    // Supabase normally returns JSON errors, but keep a stable fallback.
+  }
+
+  if (response.status === 409 || error?.code === '23505') {
+    return { ok: false, status: 409, code: 'duplicate_vote' };
+  }
+
+  return { ok: false, status: 500, code: 'vote_insert_failed' };
 }
 
 export default async function handler(req, res) {
@@ -130,20 +162,9 @@ export default async function handler(req, res) {
       });
     }
 
-    const supabase = createSupabaseAdminClient();
-    if (!supabase) {
-      return sendJson(res, 500, { ok: false, code: 'supabase_not_configured' });
-    }
-
-    const { error } = await supabase
-      .from('votes')
-      .insert({ question_id: questionId, region_id: regionId, fingerprint });
-
-    if (error) {
-      if (error.code === '23505') {
-        return sendJson(res, 409, { ok: false, code: 'duplicate_vote' });
-      }
-      return sendJson(res, 500, { ok: false, code: 'vote_insert_failed' });
+    const insert = await insertVote(questionId, regionId, fingerprint);
+    if (!insert.ok) {
+      return sendJson(res, insert.status, { ok: false, code: insert.code });
     }
 
     return sendJson(res, 200, { ok: true });
