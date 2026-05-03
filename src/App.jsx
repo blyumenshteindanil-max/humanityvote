@@ -676,11 +676,41 @@ function AnimatedNumber({ value }) {
 // =============================================================================
 function LanguageSwitcher({ currentLang, onChange }) {
   const [open, setOpen] = useState(false);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 12 });
+  const triggerRef = useRef(null);
   const current = LANGUAGES.find(l => l.code === currentLang);
 
+  useEffect(() => {
+    if (!open) return;
+
+    function updateMenuPosition() {
+      const rect = triggerRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      const menuWidth = window.innerWidth <= 720
+        ? Math.min(244, window.innerWidth - 24)
+        : 170;
+      const maxLeft = Math.max(12, window.innerWidth - menuWidth - 12);
+      const preferredLeft = rect.right - menuWidth;
+
+      setMenuPosition({
+        top: Math.min(rect.bottom + 8, window.innerHeight - 84),
+        left: Math.min(Math.max(12, preferredLeft), maxLeft),
+      });
+    }
+
+    updateMenuPosition();
+    window.addEventListener('resize', updateMenuPosition);
+    window.addEventListener('scroll', updateMenuPosition, true);
+
+    return () => {
+      window.removeEventListener('resize', updateMenuPosition);
+      window.removeEventListener('scroll', updateMenuPosition, true);
+    };
+  }, [open]);
+
   return (
-    <div style={{ position: 'relative' }}>
-      <button onClick={() => setOpen(!open)} style={{
+    <div className="language-switcher" style={{ position: 'relative' }}>
+      <button ref={triggerRef} className="language-trigger" onClick={() => setOpen(!open)} style={{
         padding: '7px 14px',
         border: '1px solid rgba(0,220,140,0.18)',
         background: 'rgba(0,220,140,0.05)',
@@ -701,16 +731,16 @@ function LanguageSwitcher({ currentLang, onChange }) {
       </button>
       {open && (
         <>
-          <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 50 }} />
-          <div style={{
-            position: 'absolute', top: 'calc(100% + 6px)', right: 0,
-            background: 'rgba(8, 18, 14, 0.95)',
-            border: '1px solid rgba(0,220,140,0.2)',
+          <div className="language-backdrop" onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 300 }} />
+          <div className="language-menu" style={{
+            position: 'fixed', top: menuPosition.top, left: menuPosition.left,
+            background: 'linear-gradient(180deg, rgba(6, 18, 13, 0.98), rgba(2, 10, 7, 0.98))',
+            border: '1px solid rgba(0,255,157,0.28)',
             backdropFilter: 'blur(20px)',
-            zIndex: 51, minWidth: 170,
-            boxShadow: '0 12px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,220,140,0.05)',
+            zIndex: 301, minWidth: 170,
+            boxShadow: '0 20px 60px rgba(0,0,0,0.82), 0 0 0 1px rgba(0,220,140,0.08), 0 0 34px rgba(0,255,157,0.08)',
             animation: 'fadeIn 0.2s ease',
-            borderRadius: 2,
+            borderRadius: 8,
             overflow: 'hidden',
           }}>
             {LANGUAGES.map(lang => (
@@ -1470,7 +1500,35 @@ export default function App() {
         }
         .cta:hover:not(:disabled)::before{transform:translateX(100%)}
         .cta:disabled{opacity:0.25;cursor:not-allowed}
+        .language-switcher{z-index:310}
+        .language-menu button:not(:last-child){border-bottom:1px solid rgba(0,220,140,0.08)!important}
         @media(max-width:720px){
+          .language-switcher{position:static!important}
+          .language-trigger{
+            min-height:36px;
+            background:rgba(4,16,11,0.96)!important;
+            border-color:rgba(0,255,157,0.32)!important;
+            box-shadow:0 10px 30px rgba(0,0,0,0.34);
+          }
+          .language-backdrop{
+            z-index:300!important;
+            background:rgba(0,0,0,0.34)!important;
+            backdrop-filter:blur(2px);
+          }
+          .language-menu{
+            position:fixed!important;
+            width:min(244px,calc(100vw - 24px))!important;
+            max-height:calc(100vh - 84px);
+            overflow:auto!important;
+            background:linear-gradient(180deg,#071611 0%,#020906 100%)!important;
+            border:1px solid rgba(0,255,157,0.38)!important;
+            border-radius:10px!important;
+            box-shadow:0 24px 76px rgba(0,0,0,0.92),0 0 0 1px rgba(0,255,157,0.1),0 0 44px rgba(0,255,157,0.12)!important;
+          }
+          .language-menu button{
+            min-height:44px;
+            background:rgba(4,16,11,0.98)!important;
+          }
           .hero-stage{min-height:285px}
           .orbit-label{display:none}
           .orbit-chip{min-width:42px;max-width:42px;height:42px;justify-content:center;padding:0;border-radius:999px}
@@ -1509,7 +1567,7 @@ export default function App() {
 
       {/* Header */}
       <div style={{
-        position: 'relative', zIndex: 10,
+        position: 'relative', zIndex: 250,
         borderBottom: '1px solid rgba(0,220,140,0.06)',
         padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         gap: 12, backdropFilter: 'blur(12px)',
