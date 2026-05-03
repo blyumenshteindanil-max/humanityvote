@@ -14,5 +14,8 @@ on votes for select
 to anon
 using (true);
 
+grant usage on schema public to service_role;
+grant select, insert on table public.votes to service_role;
+
 -- No INSERT / UPDATE / DELETE policy for anon.
 -- Supabase secret/service keys bypass RLS from the serverless endpoint.

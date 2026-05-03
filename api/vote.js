@@ -102,6 +102,7 @@ async function insertVote(questionId, regionId, fingerprint) {
     method: 'POST',
     headers: {
       apikey: config.supabaseSecretKey,
+      Authorization: `Bearer ${config.supabaseSecretKey}`,
       'Content-Type': 'application/json',
       Prefer: 'return=minimal',
     },
