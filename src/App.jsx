@@ -2348,6 +2348,7 @@ export default function App() {
             {/* Other sections */}
             {[
               { title: 'priv_fingerprint_title', text: 'priv_fingerprint_text' },
+              { title: 'priv_security_title', text: 'priv_security_text' },
               { title: 'priv_storage_title', text: 'priv_storage_text' },
               { title: 'priv_legal_basis_title', text: 'priv_legal_basis_text' },
               { title: 'priv_retention_title', text: 'priv_retention_text' },
