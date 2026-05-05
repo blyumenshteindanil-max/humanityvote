@@ -668,7 +668,7 @@ function AnimatedNumber({ value }) {
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
   }, [value]);
-  return <>{display.toLocaleString()}</>;
+  return <span className="number-glyphs">{display.toLocaleString()}</span>;
 }
 
 // =============================================================================
@@ -876,13 +876,23 @@ function ResultsView({ stats, totalVotes, userRegion, userVote, lang }) {
         </div>
         <div className="metric-card">
           <div className="metric-label">{scope === 'planet' ? t(lang, 'results_scope_planet') : userRegionData?.label}</div>
-          <div className="metric-value">{scopeTotal.toLocaleString()}</div>
-          <div className="metric-sub">{scope === 'planet' ? activeRegions + '/' + REGION_IDS.length : userRegionData?.flag}</div>
+          <div className="metric-value"><span className="number-glyphs">{scopeTotal.toLocaleString()}</span></div>
+          <div className="metric-sub">
+            {scope === 'planet' ? (
+              <>
+                <span className="number-glyphs">{activeRegions}</span>/<span className="number-glyphs">{REGION_IDS.length}</span>
+              </>
+            ) : userRegionData?.flag}
+          </div>
         </div>
         <div className="metric-card">
           <div className="metric-label">{t(lang, 'results_top_region')}</div>
-          <div className="metric-value" style={{ color: THREAT_ACCENTS[topQuestion?.id] || '#00ff9d' }}>
-            {topQuestion?.emoji} {showPercent ? topPercent + '%' : topVotes.toLocaleString()}
+          <div
+            className="metric-value threat-metric"
+            style={{ '--metric-accent': THREAT_ACCENTS[topQuestion?.id] || '#00ff9d' }}
+          >
+            <span className="metric-emoji">{topQuestion?.emoji}</span>
+            <span className="number-glyphs">{showPercent ? topPercent + '%' : topVotes.toLocaleString()}</span>
           </div>
           <div className="metric-sub">{topQuestion?.label}</div>
         </div>
@@ -937,11 +947,11 @@ function ResultsView({ stats, totalVotes, userRegion, userVote, lang }) {
                 </div>
                 <div style={{ textAlign: 'right', minWidth: 56 }}>
                   <div className="result-number">
-                    {showPercent ? pct + '%' : v.toLocaleString()}
+                    <span className="number-glyphs">{showPercent ? pct + '%' : v.toLocaleString()}</span>
                   </div>
                   {showPercent && (
-                    <div style={{ fontSize: 9, color: 'rgba(0,220,140,0.4)', fontFamily: "'JetBrains Mono','DM Mono',monospace" }}>
-                      {v.toLocaleString()}
+                    <div className="result-count-detail">
+                      <span className="number-glyphs">{v.toLocaleString()}</span>
                     </div>
                   )}
                 </div>
@@ -1192,6 +1202,13 @@ export default function App() {
           0%,100%{box-shadow:0 0 20px rgba(0,255,157,0.2),0 0 40px rgba(0,255,157,0.05)}
           50%{box-shadow:0 0 30px rgba(0,255,157,0.4),0 0 60px rgba(0,255,157,0.1)}
         }
+        .number-glyphs{
+          display:inline-block;
+          font-family:'Inter','JetBrains Mono',system-ui,sans-serif;
+          font-variant-numeric:tabular-nums lining-nums;
+          font-feature-settings:'tnum' 1,'lnum' 1;
+          letter-spacing:0;
+        }
         .hero-stage{
           position:relative;width:min(100%,560px);min-height:355px;
           display:flex;align-items:center;justify-content:center;margin:0 auto;
@@ -1233,7 +1250,18 @@ export default function App() {
           background:linear-gradient(90deg,transparent,rgba(255,255,255,0.08),transparent);
           animation:softScan 4.8s ease-in-out infinite;
         }
-        .hero-signal-row strong{color:#00ff9d;font-weight:700}
+        .hero-signal-row strong{
+          color:#dfffee;font-weight:800;
+          display:inline-flex;align-items:baseline;justify-content:center;gap:5px;
+          font-family:'Inter','JetBrains Mono',system-ui,sans-serif;
+          font-variant-numeric:tabular-nums lining-nums;
+          font-feature-settings:'tnum' 1,'lnum' 1;
+          letter-spacing:0;
+          text-shadow:0 0 18px rgba(0,255,157,0.18);
+        }
+        .hero-signal-row strong .number-glyphs{
+          color:#00ff9d;font-size:12px;
+        }
         .trust-strip{
           display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;
           margin:0 auto 42px;width:min(100%,620px);
@@ -1296,8 +1324,17 @@ export default function App() {
           text-transform:uppercase;margin-bottom:8px;font-family:'JetBrains Mono','DM Mono',monospace;
         }
         .metric-value{
-          color:#f4fff8;font-family:'Syne','Inter',sans-serif;font-weight:800;
-          font-size:clamp(20px,3vw,28px);line-height:1.05;letter-spacing:0;
+          color:#f4fff8;font-family:'Inter','JetBrains Mono',system-ui,sans-serif;font-weight:800;
+          font-size:clamp(24px,3.4vw,34px);line-height:1;letter-spacing:0;
+          font-variant-numeric:tabular-nums lining-nums;
+          font-feature-settings:'tnum' 1,'lnum' 1;
+          display:flex;align-items:center;gap:8px;
+          text-shadow:0 0 22px rgba(0,255,157,0.12),0 8px 26px rgba(0,0,0,0.34);
+        }
+        .metric-value .number-glyphs{font:inherit}
+        .metric-value.threat-metric{color:var(--metric-accent,#00ff9d)}
+        .metric-emoji{
+          font-size:.76em;line-height:1;filter:drop-shadow(0 0 14px rgba(0,255,157,0.18));
         }
         .metric-sub{color:rgba(220,255,235,0.5);font-size:10px;margin-top:6px;line-height:1.45}
         .notice-band{
@@ -1353,7 +1390,9 @@ export default function App() {
         .rank-badge{
           min-width:30px;height:30px;border-radius:8px;border:1px solid rgba(var(--accent-rgb,0,255,157),0.26);
           display:flex;align-items:center;justify-content:center;color:var(--accent,#00ff9d);
-          font-size:10px;font-family:'JetBrains Mono','DM Mono',monospace;background:rgba(0,0,0,0.16);
+          font-size:10px;font-family:'Inter','JetBrains Mono',system-ui,sans-serif;font-weight:800;
+          font-variant-numeric:tabular-nums lining-nums;font-feature-settings:'tnum' 1,'lnum' 1;
+          letter-spacing:0;background:rgba(0,0,0,0.16);
         }
         .result-emoji{font-size:26px;filter:drop-shadow(0 0 14px rgba(var(--accent-rgb,0,255,157),0.24))}
         .result-name{font-size:14px;color:#f4fff8;line-height:1.25;font-family:'Inter','JetBrains Mono',sans-serif;font-weight:700}
@@ -1363,7 +1402,20 @@ export default function App() {
           color:#00ff9d;font-size:9px;letter-spacing:.08em;text-transform:uppercase;
           font-family:'JetBrains Mono','DM Mono',monospace;
         }
-        .result-number{font-family:'Syne','Inter',sans-serif;font-size:22px;font-weight:800;letter-spacing:0;color:var(--accent,#00ff9d)}
+        .result-number{
+          color:var(--accent,#00ff9d);font-family:'Inter','JetBrains Mono',system-ui,sans-serif;
+          font-size:24px;font-weight:800;letter-spacing:0;line-height:1;
+          font-variant-numeric:tabular-nums lining-nums;font-feature-settings:'tnum' 1,'lnum' 1;
+          display:inline-flex;justify-content:flex-end;min-width:58px;
+          text-shadow:0 0 18px rgba(var(--accent-rgb,0,255,157),0.2),0 8px 20px rgba(0,0,0,0.32);
+        }
+        .result-number .number-glyphs{font:inherit}
+        .result-count-detail{
+          margin-top:5px;color:rgba(220,255,235,0.38);font-size:10px;line-height:1;
+          font-family:'Inter','JetBrains Mono',system-ui,sans-serif;font-weight:700;
+          font-variant-numeric:tabular-nums lining-nums;font-feature-settings:'tnum' 1,'lnum' 1;
+          letter-spacing:0;
+        }
         .region-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
         .region-tile{
           border:1px solid rgba(0,220,140,0.1);border-radius:8px;background:rgba(8,18,14,0.44);
@@ -1412,14 +1464,20 @@ export default function App() {
         .step-num{
           width:40px;height:40px;border-radius:8px;border:1px solid rgba(0,255,157,0.24);
           display:flex;align-items:center;justify-content:center;color:#00ff9d;
-          font-size:11px;font-family:'JetBrains Mono','DM Mono',monospace;background:rgba(0,0,0,0.14);
+          font-size:11px;font-family:'Inter','JetBrains Mono',system-ui,sans-serif;font-weight:800;
+          font-variant-numeric:tabular-nums lining-nums;font-feature-settings:'tnum' 1,'lnum' 1;
+          letter-spacing:0;background:rgba(0,0,0,0.14);
         }
         .about-card-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:42px}
         .principle-card{
           border:1px solid rgba(0,220,140,0.1);border-radius:8px;background:rgba(8,18,14,0.44);
           padding:15px 15px;display:flex;gap:12px;min-height:96px;backdrop-filter:blur(5px);
         }
-        .principle-index{color:#00ff9d;font-size:10px;letter-spacing:.12em;font-family:'JetBrains Mono','DM Mono',monospace}
+        .principle-index{
+          color:#00ff9d;font-size:10px;letter-spacing:0;
+          font-family:'Inter','JetBrains Mono',system-ui,sans-serif;font-weight:800;
+          font-variant-numeric:tabular-nums lining-nums;font-feature-settings:'tnum' 1,'lnum' 1;
+        }
         .quote-panel{
           border:1px solid rgba(0,255,157,0.2);border-radius:8px;
           background:radial-gradient(circle at top left,rgba(0,255,157,0.12),transparent 38%),rgba(8,18,14,0.48);
@@ -1460,7 +1518,9 @@ export default function App() {
         }
         .qb-index{
           position:absolute;top:11px;left:12px;color:var(--accent,#00ff9d);
-          font-size:10px;letter-spacing:0.12em;opacity:.78;
+          font-size:10px;letter-spacing:0;opacity:.78;
+          font-family:'Inter','JetBrains Mono',system-ui,sans-serif;font-weight:800;
+          font-variant-numeric:tabular-nums lining-nums;font-feature-settings:'tnum' 1,'lnum' 1;
         }
         .qb-icon{font-size:30px;filter:drop-shadow(0 0 12px rgba(var(--accent-rgb,0,255,157),0.32))}
         .qb-label{font-size:12px;line-height:1.28;max-width:100%;overflow-wrap:anywhere;color:rgba(244,255,248,0.9)}
@@ -1502,6 +1562,10 @@ export default function App() {
         .cta:disabled{opacity:0.25;cursor:not-allowed}
         .language-switcher{z-index:310}
         .language-menu button:not(:last-child){border-bottom:1px solid rgba(0,220,140,0.08)!important}
+        .header-vote-count .number-glyphs{
+          color:#dfffee;font-weight:800;
+          text-shadow:0 0 14px rgba(0,255,157,0.18);
+        }
         @media(max-width:720px){
           .language-switcher{position:static!important}
           .language-trigger{
@@ -1654,7 +1718,7 @@ export default function App() {
             </button>
           )}
 
-          <div style={{
+          <div className="header-vote-count" style={{
             fontSize: 11, color: 'rgba(0,220,140,0.5)',
             letterSpacing: '0.04em',
             display: 'flex', alignItems: 'center', gap: 6,
