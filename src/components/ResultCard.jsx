@@ -50,6 +50,7 @@ export default function ResultCard({
 
   // Direct link to the site (this is what people share)
   const shareUrl = `${baseUrl}/?utm_source=share&utm_medium=card&q=${questionId}`;
+  const shareTextWithUrl = `${translate('share_text')}\n\n${shareUrl}`;
 
   // ── Actions ──
   const getImageFile = async () => {
@@ -63,10 +64,22 @@ export default function ResultCard({
       if (navigator.share) {
         try {
           const imageFile = await getImageFile();
+          const shareWithImageAndLink = {
+            title: translate('share_title'),
+            text: shareTextWithUrl,
+            url: shareUrl,
+            files: [imageFile],
+          };
+
+          if (navigator.canShare?.(shareWithImageAndLink)) {
+            await navigator.share(shareWithImageAndLink);
+            return;
+          }
+
           if (navigator.canShare?.({ files: [imageFile] })) {
             await navigator.share({
               title: translate('share_title'),
-              text: translate('share_text'),
+              text: shareTextWithUrl,
               files: [imageFile],
             });
             return;
@@ -77,7 +90,7 @@ export default function ResultCard({
 
         await navigator.share({
           title: translate('share_title'),
-          text: translate('share_text'),
+          text: shareTextWithUrl,
           url: shareUrl,
         });
         return;
